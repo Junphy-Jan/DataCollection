@@ -23,6 +23,7 @@ def get_hot_search():
     logger.info("进入get_hot_search。。。")
     print("进入get_hot_search。。。")
     hot_search_list = []
+    total_sce = 0
     while True:
         try:
             ret = requests.get(HOT_SEARCH_URL)
@@ -32,12 +33,12 @@ def get_hot_search():
                 if len(hot_search_list) > 0:
                     for i in range(len(hot_search_list)):
                         if hs_dict.get("note", "") == hot_search_list[i].note and \
-                                hs_dict.get("onboard_time", -1) == hot_search_list[i].onboard_time:
+                                hs_dict.get("mid", "") == hot_search_list[i].mid:
                             hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
                             exist_flag = True
                             break
                 if not exist_flag:
-                    hs = HotSearch(hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
+                    hs = HotSearch(hs_dict.get("mid", ""), hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
                                    category=hs_dict.get("category", ""), rank=hs_dict.get("rank", -1),
                                    link=hs_dict.get("mblog", ""), onboard_time=hs_dict.get("onboard_time", -1),
                                    raw_hot=hs_dict.get("raw_hot", -1), hot_num=hs_dict.get("num", -1),
@@ -45,9 +46,11 @@ def get_hot_search():
                     hot_search_list.append(hs)
         except Exception as e:
             print(e)
-        time.sleep(10)
+        time.sleep(15)
+        total_sce += 15
         hs_title = [hs.note + "热度：" + str(hs.hot_num) for hs in hot_search_list]
-        logger.info("当前热搜：{}".format(hs_title))
+        if total_sce % 60 == 0:
+            logger.info("当前热搜：{}".format(hs_title))
 
 
 class HotSearchCollector(Collector):
