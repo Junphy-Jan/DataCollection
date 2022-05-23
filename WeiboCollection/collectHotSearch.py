@@ -57,7 +57,7 @@ def get_hot_search():
             print(e)
         time.sleep(15)
         total_sce += 15
-        hs_title = [hs.note + "热度：" + str(hs.hot_num[:-1]) for hs in hot_search_list]
+        hs_title = [hs.note + "热度：" + str(hs.hot_num[-1]) for hs in hot_search_list]
         if total_sce % 600 == 0:
             logger.info("当前热搜：{}".format(hs_title))
         if is_xx_time(WHEN_SAVE2DB) and not saved:

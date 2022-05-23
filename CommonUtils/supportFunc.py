@@ -11,7 +11,6 @@ def is_xx_time(xx: str):
     time_now = int(time.time())
     time_local = time.localtime(time_now)
     dt = time.strftime("%H:%M", time_local)
-    print(dt)
     return dt == xx
 
 
