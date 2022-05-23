@@ -10,8 +10,9 @@ import ray
 import requests
 
 from Collector import Collector
-from CommonUtils.constant import HOT_SEARCH_URL
+from CommonUtils.constant import HOT_SEARCH_URL, WEIBO_SAVED_PATH, WHEN_SAVE2DB
 from CommonUtils.loggerHelper import get_logger
+from CommonUtils.supportFunc import is_xx_time
 from WeiboCollection.HotSearchEntity import HotSearch
 
 main_logger = get_logger("data_collection.log")
@@ -24,11 +25,19 @@ def get_hot_search():
     print("进入get_hot_search。。。")
     hot_search_list = []
     total_sce = 0
+    saved = False
     while True:
         try:
             ret = requests.get(HOT_SEARCH_URL)
             ret_dict: dict = json.loads(ret.text)
             for hs_dict in ret_dict["data"]["band_list"]:
+                onboard_time = hs_dict.get("onboard_time", "")
+                link = hs_dict.get("mblog", "")
+                if onboard_time != "":
+                    onboard_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(onboard_time))
+                if link != "":
+                    link = link["text"]
+                
                 exist_flag = False
                 if len(hot_search_list) > 0:
                     for i in range(len(hot_search_list)):
@@ -40,7 +49,7 @@ def get_hot_search():
                 if not exist_flag:
                     hs = HotSearch(hs_dict.get("mid", ""), hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
                                    category=hs_dict.get("category", ""), rank=hs_dict.get("rank", -1),
-                                   link=hs_dict.get("mblog", ""), onboard_time=hs_dict.get("onboard_time", -1),
+                                   link=link, onboard_time=onboard_time,
                                    raw_hot=hs_dict.get("raw_hot", -1), hot_num=hs_dict.get("num", -1),
                                    ad_info=hs_dict.get("ad_info", ""))
                     hot_search_list.append(hs)
@@ -48,9 +57,18 @@ def get_hot_search():
             print(e)
         time.sleep(15)
         total_sce += 15
-        hs_title = [hs.note + "热度：" + str(hs.hot_num) for hs in hot_search_list]
-        if total_sce % 60 == 0:
+        hs_title = [hs.note + "热度：" + str(hs.hot_num[:-1]) for hs in hot_search_list]
+        if total_sce % 600 == 0:
             logger.info("当前热搜：{}".format(hs_title))
+        if is_xx_time(WHEN_SAVE2DB) and not saved:
+            saved = True
+            with open(WEIBO_SAVED_PATH, "w", encoding="utf-8") as f:
+                json.dump([hs.__dict__ for hs in hot_search_list], f, ensure_ascii=False)
+            hot_search_list = []
+        if not is_xx_time(WHEN_SAVE2DB):
+            saved = False
+            
+            
 
 
 class HotSearchCollector(Collector):
