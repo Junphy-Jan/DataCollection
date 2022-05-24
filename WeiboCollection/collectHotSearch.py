@@ -3,6 +3,7 @@
 API：https://weibo.com/ajax/statuses/hot_band
 每天凌晨3点保存一次到数据库
 """
+from curses import raw
 import json
 import time
 
@@ -10,7 +11,7 @@ import ray
 import requests
 
 from Collector import Collector
-from CommonUtils.constant import HOT_SEARCH_URL, WEIBO_SAVED_PATH, WHEN_SAVE2DB
+from CommonUtils.constant import HOT_SEARCH_URL, WEIBO_SAVED_PATH, WHEN_SAVE2DB, COLLECT_INTERVAL
 from CommonUtils.loggerHelper import get_logger
 from CommonUtils.supportFunc import is_xx_time
 from WeiboCollection.HotSearchEntity import HotSearch
@@ -33,30 +34,41 @@ def get_hot_search():
             for hs_dict in ret_dict["data"]["band_list"]:
                 onboard_time = hs_dict.get("onboard_time", "")
                 link = hs_dict.get("mblog", "")
+                raw_hot = hs_dict.get("raw_hot", -1)
                 if onboard_time != "":
                     onboard_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(onboard_time))
+                # else:
+                #     onboard_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
                 if link != "":
                     link = link["text"]
                 
                 exist_flag = False
                 if len(hot_search_list) > 0:
                     for i in range(len(hot_search_list)):
-                        if hs_dict.get("note", "") == hot_search_list[i].note and \
-                                hs_dict.get("mid", "") == hot_search_list[i].mid:
-                            hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
-                            exist_flag = True
-                            break
+                        # 热搜存在判断逻辑：如果上榜时间存在，则以note + onboard_time 视为同一个，
+                        #                  如果raw_hot存在，以note + raw_hot为准
+                        if hs_dict.get("note", "") == hot_search_list[i].note:
+                            if onboard_time != "":
+                                if onboard_time == hot_search_list[i].onboard_time:
+                                    hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
+                                    exist_flag = True
+                                    break
+                            if raw_hot != -1:
+                                if raw_hot == hot_search_list[i].raw_hot:
+                                    hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
+                                    exist_flag = True
+                                    break
                 if not exist_flag:
                     hs = HotSearch(hs_dict.get("mid", ""), hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
                                    category=hs_dict.get("category", ""), rank=hs_dict.get("rank", -1),
                                    link=link, onboard_time=onboard_time,
-                                   raw_hot=hs_dict.get("raw_hot", -1), hot_num=hs_dict.get("num", -1),
+                                   raw_hot=raw_hot, hot_num=hs_dict.get("num", -1),
                                    ad_info=hs_dict.get("ad_info", ""))
                     hot_search_list.append(hs)
         except Exception as e:
             print(e)
-        time.sleep(15)
-        total_sce += 15
+        time.sleep(COLLECT_INTERVAL)
+        total_sce += COLLECT_INTERVAL
         hs_title = [hs.note + "热度：" + str(hs.hot_num[-1]) for hs in hot_search_list]
         if total_sce % 600 == 0:
             logger.info("当前热搜：{}".format(hs_title))
