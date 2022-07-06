@@ -13,7 +13,7 @@ import requests
 from Collector import Collector
 from CommonUtils.constant import HOT_SEARCH_URL, WEIBO_SAVED_PATH, WHEN_SAVE2DB, COLLECT_INTERVAL
 from CommonUtils.loggerHelper import get_logger
-from CommonUtils.supportFunc import is_xx_time
+from CommonUtils.supportFunc import is_xx_time, get_today_format
 from WeiboCollection.HotSearchEntity import HotSearch
 
 main_logger = get_logger("data_collection.log")
@@ -74,7 +74,7 @@ def get_hot_search():
             logger.info("当前热搜：{}".format(hs_title))
         if is_xx_time(WHEN_SAVE2DB) and not saved:
             saved = True
-            with open(WEIBO_SAVED_PATH, "w", encoding="utf-8") as f:
+            with open(WEIBO_SAVED_PATH.format(get_today_format()), "w", encoding="utf-8") as f:
                 json.dump([hs.__dict__ for hs in hot_search_list], f, ensure_ascii=False)
             hot_search_list = []
         if not is_xx_time(WHEN_SAVE2DB):

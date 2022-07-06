@@ -14,5 +14,12 @@ def is_xx_time(xx: str):
     return dt == xx
 
 
+def get_today_format():
+    today = time.strftime("%Y_%m_%d", time.localtime(int(time.time())))
+    print(today)
+    return today
+
+
 if __name__ == '__main__':
     print(is_xx_time("19:18"))
+    get_today_format()
