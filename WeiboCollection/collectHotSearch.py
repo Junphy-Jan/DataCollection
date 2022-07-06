@@ -32,6 +32,7 @@ def get_hot_search():
             ret = requests.get(HOT_SEARCH_URL)
             ret_dict: dict = json.loads(ret.text)
             for hs_dict in ret_dict["data"]["band_list"]:
+                mid = hs_dict.get("mid", "")
                 onboard_time = hs_dict.get("onboard_time", "")
                 link = hs_dict.get("mblog", "")
                 raw_hot = hs_dict.get("raw_hot", -1)
@@ -58,8 +59,13 @@ def get_hot_search():
                                     hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
                                     exist_flag = True
                                     break
+                            # 一般是广告
+                            if mid == "" or raw_hot == -1:
+                                exist_flag = True
+                                break
+                                
                 if not exist_flag:
-                    hs = HotSearch(hs_dict.get("mid", ""), hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
+                    hs = HotSearch(mid, hs_dict["note"], channel_type=hs_dict.get("channel_type", ""),
                                    category=hs_dict.get("category", ""), rank=hs_dict.get("rank", -1),
                                    link=link, onboard_time=onboard_time,
                                    raw_hot=raw_hot, hot_num=hs_dict.get("num", -1),
