@@ -86,8 +86,6 @@ def get_hot_search():
         if not is_xx_time(WHEN_SAVE2DB):
             saved = False
             
-            
-
 
 class HotSearchCollector(Collector):
     def __init__(self, name, save_strategy):

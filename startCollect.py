@@ -9,8 +9,9 @@ collector.set_collector(weibo_hs_collector)
 while True:
     print("running...")
     collector.run_collect()
-    # 1 day
-    time.sleep(43200)
+    # 1 year
+    year = 60*60*24*365
+    time.sleep(year)
 
 # if __name__ == '__main__':
 #     collector = Collector()
