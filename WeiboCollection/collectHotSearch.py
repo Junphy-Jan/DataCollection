@@ -73,9 +73,11 @@ def get_hot_search():
                     hot_search_list.append(hs)
         except Exception as e:
             print(e)
+            logger.error("请求热搜异常，e:{}".format(e))
         time.sleep(COLLECT_INTERVAL)
         total_sce += COLLECT_INTERVAL
         hs_title = [hs.note + "热度：" + str(hs.hot_num[-1]) for hs in hot_search_list]
+        # 每过10分钟记录一次日志
         if total_sce % 600 == 0:
             logger.info("当前热搜：{}".format(hs_title))
         if is_xx_time(WHEN_SAVE2DB) and not saved:

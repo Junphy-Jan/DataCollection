@@ -4,7 +4,7 @@ from Collector import Collector
 from WeiboCollection.collectHotSearch import HotSearchCollector
 
 collector = Collector()
-weibo_hs_collector = HotSearchCollector(name="微博热搜收集器", save_strategy="每天04:00入库")
+weibo_hs_collector = HotSearchCollector(name="微博热搜收集器", save_strategy="每天23:59保存")
 collector.set_collector(weibo_hs_collector)
 while True:
     print("running...")
