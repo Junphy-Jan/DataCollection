@@ -1,3 +1,4 @@
+import time
 import uuid
 
 
@@ -15,6 +16,7 @@ class HotSearch:
         self.hot_num = []
         self.set_hot_num(hot_num)
         self.ad_info = ad_info
+        self.last_update_time = int(time.time())
 
     def __eq__(self, other):
         if self.note == other.note and self.mid == other.mid:

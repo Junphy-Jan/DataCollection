@@ -52,11 +52,13 @@ def get_hot_search():
                             if onboard_time != "":
                                 if onboard_time == hot_search_list[i].onboard_time:
                                     hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
+                                    hot_search_list[i].last_update_time = int(time.time())
                                     exist_flag = True
                                     break
                             if raw_hot != -1:
                                 if raw_hot == hot_search_list[i].raw_hot:
                                     hot_search_list[i].set_hot_num(hs_dict.get("num", -1))
+                                    hot_search_list[i].last_update_time = int(time.time())
                                     exist_flag = True
                                     break
                             # 一般是广告
@@ -76,15 +78,25 @@ def get_hot_search():
             logger.error("请求热搜异常，e:{}".format(e))
         time.sleep(COLLECT_INTERVAL)
         total_sce += COLLECT_INTERVAL
-        hs_title = [hs.note + "热度：" + str(hs.hot_num[-1]) for hs in hot_search_list]
+        hs_title = [hs.note + "-热度：" + str(hs.hot_num[-1]) +
+                    "-更新时间：{} || ".format(time.strftime("%Y_%m_%d", time.localtime(hs.last_update_time)))
+                    for hs in hot_search_list]
         # 每过10分钟记录一次日志
         if total_sce % 600 == 0:
             logger.info("当前热搜：{}".format(hs_title))
         if is_xx_time(WHEN_SAVE2DB) and not saved:
             saved = True
+            cur_hot_search_length = len(hot_search_list)
+            now = int(time.time())
+            need_save_hs = []
+            # 热搜最后更新时间在一天之前的，保存到文件中
+            for hs_idx in range(cur_hot_search_length-1, -1, -1):
+                if now - hot_search_list[hs_idx].last_update_time >= 60*60*24:
+                    need_save_hs.append(hot_search_list[hs_idx])
+                    hot_search_list.pop(hs_idx)
+            logger.info("当前热搜条数：{}，已保存热搜条数：{}".format(len(hot_search_list), len(need_save_hs)))
             with open(WEIBO_SAVED_PATH.format(get_today_format()), "w", encoding="utf-8") as f:
-                json.dump([hs.__dict__ for hs in hot_search_list], f, ensure_ascii=False)
-            hot_search_list = []
+                json.dump([hs.__dict__ for hs in need_save_hs], f, ensure_ascii=False)
         if not is_xx_time(WHEN_SAVE2DB):
             saved = False
             
