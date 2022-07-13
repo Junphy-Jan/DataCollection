@@ -79,7 +79,7 @@ def get_hot_search():
         time.sleep(COLLECT_INTERVAL)
         total_sce += COLLECT_INTERVAL
         hs_title = [hs.note + "-热度：" + str(hs.hot_num[-1]) +
-                    "-更新时间：{} || ".format(time.strftime("%Y_%m_%d", time.localtime(hs.last_update_time)))
+                    "-更新时间：{} ".format(time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(hs.last_update_time)))
                     for hs in hot_search_list]
         # 每过10分钟记录一次日志
         if total_sce % 600 == 0:
